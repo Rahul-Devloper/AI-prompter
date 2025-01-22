@@ -11,7 +11,7 @@ export const POST = async (req) => {
     const newPrompt = new Prompt({
       creator: userId,
       prompt,
-      tag,
+      tag: `#${tag}`,
     })
     console.log('newPrompt=>', newPrompt)
     const savePrompt = await newPrompt.save()
