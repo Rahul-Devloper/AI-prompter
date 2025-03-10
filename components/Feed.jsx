@@ -5,9 +5,13 @@ import { useState } from 'react'
 import PromptCard from './PromptCard'
 
 const PromptCardList = ({ data, handleTagClick }) => {
+  if (!data.length) {
+    return <p className='text-center text-gray-500'>No prompts found.</p>
+  }
+
   return (
     <div className='mt-16 prompt_layout'>
-      {data?.map((post) => (
+      {data.map((post) => (
         <PromptCard
           key={post._id}
           post={post}
@@ -24,32 +28,33 @@ const Feed = () => {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const handleSearchChange = (e) => {
-    setSearchText(e.target.value)
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
+
+      const response = await fetch('/api/prompt', {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache',
+        },
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to fetch prompts')
+      }
+
+      const data = await response.json()
+      setPosts(data)
+    } catch (error) {
+      console.error('Error loading prompts:', error)
+      setError(error.message)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        setIsLoading(true)
-        setError(null)
-        const response = await fetch('/api/prompt')
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.message || 'Failed to fetch prompts')
-        }
-
-        const data = await response.json()
-        setPosts(data)
-      } catch (error) {
-        console.error('Error fetching posts:', error)
-        setError(error.message)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
     fetchPosts()
   }, [])
 
@@ -62,19 +67,22 @@ const Feed = () => {
           className='search_input peer'
           required
           value={searchText}
-          onChange={handleSearchChange}
+          onChange={(e) => setSearchText(e.target.value)}
         />
       </form>
 
       {isLoading && (
-        <div className='mt-16 text-center'>
-          <p>Loading prompts...</p>
+        <div className='mt-16 flex justify-center items-center'>
+          <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500'></div>
         </div>
       )}
 
       {error && (
         <div className='mt-16 text-center text-red-500'>
-          <p>Error: {error}</p>
+          <p>{error}</p>
+          <button onClick={fetchPosts} className='mt-4 black_btn'>
+            Try Again
+          </button>
         </div>
       )}
 

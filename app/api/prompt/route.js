@@ -1,37 +1,49 @@
 import { connectToDB } from '@utils/database'
 import Prompt from '@models/prompt'
 
-export const GET = async (req) => {
+export const GET = async (request) => {
   try {
-    // First try to connect to DB
-    console.log('Attempting to connect to DB...')
     await connectToDB()
-    console.log('DB connection successful')
 
-    // Then fetch prompts
-    console.log('Fetching prompts...')
-    const prompts = await Prompt.find({}).populate('creator').lean()
-    console.log(`Found ${prompts.length} prompts`)
+    const prompts = await Prompt.find({})
+      .populate({
+        path: 'creator',
+        select: 'username email image _id',
+      })
+      .sort({ createdAt: -1 }) // Optional: sort by newest first
+      .lean() // For better performance
 
-    return new Response(JSON.stringify(prompts), { 
+    if (!prompts) {
+      return new Response(JSON.stringify([]), {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+        },
+      })
+    }
+
+    return new Response(JSON.stringify(prompts), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store'
-      }
+        'Cache-Control': 'no-store, must-revalidate',
+      },
     })
   } catch (error) {
-    console.error('Detailed error:', error)
-    
-    return new Response(JSON.stringify({
-      message: 'Failed to fetch prompts',
-      error: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-    }), { 
-      status: 500,
-      headers: {
-        'Content-Type': 'application/json'
+    console.error('Error fetching prompts:', error)
+    return new Response(
+      JSON.stringify({
+        error: 'Failed to fetch prompts',
+        details: error.message,
+      }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'no-store, must-revalidate',
+        },
       }
-    })
+    )
   }
 }

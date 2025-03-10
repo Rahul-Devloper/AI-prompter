@@ -15,19 +15,21 @@ export const connectToDB = async () => {
       throw new Error('MONGODB_URI is not defined in environment variables')
     }
 
-    console.log('Attempting to connect to MongoDB...')
-    await mongoose.connect(process.env.MONGODB_URI, {
+    const opts = {
       dbName: 'prompterdb',
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      bufferCommands: false,
       connectTimeoutMS: 10000, // 10 seconds
       socketTimeoutMS: 10000, // 10 seconds
-    })
+    }
 
+    await mongoose.connect(process.env.MONGODB_URI, opts)
     isConnected = true
     console.log('MongoDB connected successfully')
   } catch (error) {
     console.error('MongoDB connection error:', error)
+    isConnected = false
     throw error // Re-throw the error to handle it in the API routes
   }
 }
