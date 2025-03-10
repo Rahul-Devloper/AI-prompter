@@ -6,6 +6,10 @@ import { useSession } from 'next-auth/react'
 import { usePathname, useRouter } from 'next/navigation'
 
 const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
+  if (!post || !post.creator) {
+    return <div>Loading...</div>
+  }
+
   console.log('post=>', post)
   const [copied, setCopied] = useState('')
   const handleCopy = () => {
@@ -18,10 +22,10 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
   const router = useRouter()
   return (
     <div className='prompt_card'>
-      <div className='flex justify-between'>
+      <div className='flex justify-between items-start gap-5'>
         <div className='flex-1 flex justify-start items-center gap-3 cursor-pointer'>
           <Image
-            src={post.creator.image}
+            src={post.creator.image || '/assets/images/default-avatar.png'}
             alt='user_image'
             width={40}
             height={40}
@@ -29,10 +33,10 @@ const PromptCard = ({ post, handleTagClick, handleEdit, handleDelete }) => {
           />
           <div className='flex flex-col'>
             <h3 className='font-satoshi font-semibold text-gray-900'>
-              {post.creator.username}
+              {post.creator.username || 'Anonymous'}
             </h3>
             <p className='font-inter text-sm text-gray-500'>
-              {post.creator.email}
+              {post.creator.email || 'No email provided'}
             </p>
           </div>
         </div>

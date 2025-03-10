@@ -17,11 +17,24 @@ const handler = NextAuth({
   callbacks: {
     async session({ session }) {
       try {
+        await connectToDB()
         const sessionUser = await User.findOne({ email: session.user.email })
-        session.user.id = sessionUser._id.toString()
+        if (sessionUser) {
+          session.user.id = sessionUser._id.toString()
+          session.user.image =
+            sessionUser.image ||
+            session.user.image ||
+            '/assets/images/default-avatar.png'
+          session.user.username = sessionUser.username
+        }
         return session
       } catch (error) {
         console.error('Session callback error:', error)
+        // Ensure user object has default values if DB connection fails
+        session.user = {
+          ...session.user,
+          image: session.user?.image || '/assets/images/default-avatar.png',
+        }
         return session
       }
     },
