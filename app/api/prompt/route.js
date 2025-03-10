@@ -3,20 +3,16 @@ import Prompt from '@models/prompt'
 
 export const GET = async (req) => {
   try {
-    await Promise.race([
-      connectToDB(),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Connection timeout')), 8000)
-      )
-    ])
+    // First try to connect to DB
+    console.log('Attempting to connect to DB...')
+    await connectToDB()
+    console.log('DB connection successful')
 
-    const prompts = await Promise.race([
-      Prompt.find({}).populate('creator'),
-      new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Query timeout')), 8000)
-      )
-    ])
-    
+    // Then fetch prompts
+    console.log('Fetching prompts...')
+    const prompts = await Prompt.find({}).populate('creator').lean()
+    console.log(`Found ${prompts.length} prompts`)
+
     return new Response(JSON.stringify(prompts), { 
       status: 200,
       headers: {
@@ -25,10 +21,12 @@ export const GET = async (req) => {
       }
     })
   } catch (error) {
-    console.error('Error in GET /api/prompt:', error)
-    return new Response(JSON.stringify({ 
-      error: 'Failed to fetch prompts',
-      details: error.message 
+    console.error('Detailed error:', error)
+    
+    return new Response(JSON.stringify({
+      message: 'Failed to fetch prompts',
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     }), { 
       status: 500,
       headers: {

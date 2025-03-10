@@ -1,5 +1,5 @@
 //google authentication
-import NextAuth from 'next-auth/next'
+import NextAuth from 'next-auth'
 import GoogleProvider from 'next-auth/providers/google'
 
 import User from '@models/user'
@@ -16,27 +16,23 @@ const handler = NextAuth({
   ],
   callbacks: {
     async session({ session }) {
-      //the argument session is the session object that is received from the google authentication provider
-      //to get information about the loggedIn user
-      const sessionUser = await User.findOne({
-        email: session.user.email,
-      })
-
-      session.user.id = sessionUser._id.toString()
-
-      return session
+      try {
+        const sessionUser = await User.findOne({ email: session.user.email })
+        session.user.id = sessionUser._id.toString()
+        return session
+      } catch (error) {
+        console.error('Session callback error:', error)
+        return session
+      }
     },
     async signIn({ profile }) {
       try {
-        // serverless function
         await connectToDB()
 
         // check if user already exists
-        const userExists = await User.findOne({
-          email: profile.email,
-        })
+        const userExists = await User.findOne({ email: profile.email })
 
-        // if not, create a new user
+        // if not, create a new document and save user in MongoDB
         if (!userExists) {
           await User.create({
             email: profile.email,
@@ -47,10 +43,15 @@ const handler = NextAuth({
 
         return true
       } catch (error) {
-        console.log(error)
+        console.error('Sign in callback error:', error)
         return false
       }
     },
+  },
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 })
 
