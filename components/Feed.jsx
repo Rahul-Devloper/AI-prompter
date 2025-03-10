@@ -21,6 +21,8 @@ const PromptCardList = ({ data, handleTagClick }) => {
 const Feed = () => {
   const [searchText, setSearchText] = useState('')
   const [posts, setPosts] = useState([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   const handleSearchChange = (e) => {
     setSearchText(e.target.value)
@@ -28,10 +30,24 @@ const Feed = () => {
 
   useEffect(() => {
     const fetchPosts = async () => {
-      const response = await fetch('/api/prompt')
-      const data = await response.json()
+      try {
+        setIsLoading(true)
+        setError(null)
+        const response = await fetch('/api/prompt')
 
-      setPosts(data)
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Failed to fetch prompts')
+        }
+
+        const data = await response.json()
+        setPosts(data)
+      } catch (error) {
+        console.error('Error fetching posts:', error)
+        setError(error.message)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     fetchPosts()
@@ -49,7 +65,22 @@ const Feed = () => {
           onChange={handleSearchChange}
         />
       </form>
-      <PromptCardList data={posts} handleTagClick={() => {}} />
+
+      {isLoading && (
+        <div className='mt-16 text-center'>
+          <p>Loading prompts...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className='mt-16 text-center text-red-500'>
+          <p>Error: {error}</p>
+        </div>
+      )}
+
+      {!isLoading && !error && (
+        <PromptCardList data={posts} handleTagClick={() => {}} />
+      )}
     </section>
   )
 }
