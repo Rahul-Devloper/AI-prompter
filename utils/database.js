@@ -20,6 +20,8 @@ export const connectToDB = async () => {
       dbName: 'prompterdb',
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      connectTimeoutMS: 10000, // 10 seconds
+      socketTimeoutMS: 10000, // 10 seconds
     })
 
     isConnected = true
