@@ -8,8 +8,10 @@ import Form from '@components/Form'
 const EditPrompt = () => {
   const searchParams = useSearchParams()
   const promptId = searchParams.get('id')
+  console.log('promptId=>', promptId)
   const router = useRouter()
   const [submitting, setSubmitting] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const [post, setPost] = useState({
     prompt: '',
     tag: '',
@@ -17,17 +19,29 @@ const EditPrompt = () => {
 
   useEffect(() => {
     const getPromptDetails = async () => {
-      const response = await fetch(`/api/prompt/${promptId}`)
-      const data = await response.json()
-      setPost({
-        prompt: data.prompt,
-        tag: data.tag,
-      })
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/prompt/${promptId}`)
+        const data = await response.json()
+        setPost(data)
+      } catch (error) {
+        console.error('Error fetching prompt:', error)
+      } finally {
+        setIsLoading(false)
+      }
     }
     if (promptId) getPromptDetails()
   }, [promptId])
 
-  if (!post.prompt) return <p className='no-result'>No prompt found</p>
+  if (isLoading) {
+    return (
+      <div className='flex justify-center items-center min-h-[200px]'>
+        <div className='animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500'></div>
+      </div>
+    )
+  }
+
+  if (!post.prompt) return null
 
   const updatePrompt = async (e) => {
     e.preventDefault()

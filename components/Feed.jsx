@@ -20,7 +20,7 @@ const PromptCardList = ({ data, handleTagClick }) => {
 const Feed = () => {
   const [searchText, setSearchText] = useState('')
   const [posts, setPosts] = useState([])
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(false)
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
@@ -47,14 +47,16 @@ const Feed = () => {
         const data = await response.json()
         if (mounted) {
           setPosts(data)
+          setIsLoading(false)
         }
       } catch (error) {
         console.error('Error fetching posts:', error)
-      } finally {
-        if (mounted) {
-          setIsLoading(false)
-        }
       }
+      // finally {
+      //   if (mounted) {
+      //     setIsLoading(false)
+      //   }
+      // }
     }
 
     if (mounted) {

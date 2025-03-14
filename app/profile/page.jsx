@@ -50,7 +50,9 @@ const MyProfile = () => {
       name={session.user.name || 'User'}
       desc='Welcome to your profile page'
       data={posts}
-      handleEdit={() => {}}
+      handleEdit={(post) => {
+        router.push(`/update-prompt?id=${post._id}`)
+      }}
       handleDelete={() => {}}
     />
   )
