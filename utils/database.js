@@ -27,6 +27,10 @@ export const connectToDB = async () => {
     await mongoose.connect(process.env.MONGODB_URI, opts)
     isConnected = true
     console.log('MongoDB connected successfully')
+
+    // Ensure models are registered
+    require('@models/user')
+    require('@models/prompt')
   } catch (error) {
     console.error('MongoDB connection error:', error)
     isConnected = false
